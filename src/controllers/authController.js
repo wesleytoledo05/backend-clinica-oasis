@@ -56,15 +56,17 @@ router.post('/login', async(req, res) => {
         if (email && password) {
             //faz a busca no banco de dados para ver se o usuario possui um cadastro feito
             mysqConnection.query('SELECT * FROM accounts WHERE email = ? AND password = MD5(?)', [email, password], function(error, results, fields) {
+                console.log(results)
                 // se tiver algun problema com a query, mostrar o erro
                 if (error) {
                     res.status(400).json({ message: "Erro ao tentar realizar autenticação no banco de dados" })
                 } else {
+                    let user = {name: results[0].name, birthday: results[0].birthday, wpp: results[0].wpp, email: results[0].email, id_client: results[0].id_client}
                     //se a conta existe
                     if (results.length > 0) {
-                        res.status(200).json({ message: "Login efetuado com sucesso!" });
+                        res.status(200).json({ message: "Login efetuado com sucesso!", user, signed:true });
                     } else {
-                        res.status(400).json({message: "Verifique as informações, e tente novamente!"});
+                        res.status(400).json({message: "Verifique as informações, e tente novamente!", signed:false});
                     }
                 }
             }); 
@@ -75,54 +77,54 @@ router.post('/login', async(req, res) => {
 
 });
 
-// // http://localhost:5500/signed
-router.get('/signed', async(request, response) => {
-    //se o usuario esta logado 
-    if (request.session.loggedin) {
-        //faz a requisicao do email da sessao para estar logado
-        let email = request.session.email;
-        let sql = "SELECT * FROM nodelogin.accounts WHERE email = ?"
+// // // http://localhost:5500/signed
+// router.get('/signed', async(request, response) => {
+//     //se o usuario esta logado 
+//     if (request.session.loggedin) {
+//         //faz a requisicao do email da sessao para estar logado
+//         let email = request.session.email;
+//         let sql = "SELECT * FROM nodelogin.accounts WHERE email = ?"
 
-        connection.query(sql, [email], function(error, results) {
-            let usuario = results[0]
-            response.render('pages/logado', { usuario: usuario });
-        })
+//         connection.query(sql, [email], function(error, results) {
+//             let usuario = results[0]
+//             response.render('pages/logado', { usuario: usuario });
+//         })
 
-    } else {
-        // 	// Nao esta logado
-        response.redirect('/home');
-    }
+//     } else {
+//         // 	// Nao esta logado
+//         response.redirect('/home');
+//     }
 
-});
+// });
 
 
 
 // http://localhost:5500/register
-router.post("/register", async(request, response) => {
+// router.post("/register", async(request, response) => {
   
-    //faz a requisição vinda do body do html para realizar o cadastro
-    const { nome } = request.body;
-    const { data_nasc } = request.body;
-    const { wpp } = request.body;
-    const { email } = request.body;
-    const { password } = request.body;
+//     //faz a requisição vinda do body do html para realizar o cadastro
+//     const { nome } = request.body;
+//     const { data_nasc } = request.body;
+//     const { wpp } = request.body;
+//     const { email } = request.body;
+//     const { password } = request.body;
 
-    //variavel para realizar o comando MySQL
-    let SQL = "INSERT INTO accounts(nome, data_nasc, wpp, email, password) VALUES ( ?, ?, ?, ?, MD5(?))";
+//     //variavel para realizar o comando MySQL
+//     let SQL = "INSERT INTO accounts(nome, data_nasc, wpp, email, password) VALUES ( ?, ?, ?, ?, MD5(?))";
 
-    connection.query(SQL, [nome, data_nasc, wpp, email, password], (err, results) => {
-        if (err) {
-            response.json({ status: 500, message: "Erro ao tentar realizar cadastro. Revise as informações" })
-        }
-        //se a conta existe
-        if (results) {
+//     connection.query(SQL, [nome, data_nasc, wpp, email, password], (err, results) => {
+//         if (err) {
+//             response.json({ status: 500, message: "Erro ao tentar realizar cadastro. Revise as informações" })
+//         }
+//         //se a conta existe
+//         if (results) {
             
-            response.json({ status: 200, message: "Cadastro realizado com sucesso." })
+//             response.json({ status: 200, message: "Cadastro realizado com sucesso." })
 
-        }
+//         }
 
-    })
-})
+//     })
+// })
 
 
 router.post('/recsenha_1', async(request, response) => {
@@ -142,161 +144,91 @@ router.post('/recsenha_1', async(request, response) => {
     })
 })
 
-router.post('/recsenha_2', async(request, response) => {
-    //faz a requisição vinda do body do html para saber qual a senha que sera inserida
-    const { password } = request.body;
-    //faz a requisicao do email da sessao para estar logado
-    let email = request.session.email;
-    //variavel para realizar o comando MySQL
-    let passwordsql = "UPDATE accounts SET password = MD5(?) WHERE email = ?"
-    connection.query(passwordsql, [password, email], (err, results) => {
-        if (err) {
-            response.redirect('/recsenha1')
-        }
-        if (results) {
-            response.redirect('/signed')
-        }
-    })
-})
+// router.post('/recsenha_2', async(request, response) => {
+//     //faz a requisição vinda do body do html para saber qual a senha que sera inserida
+//     const { password } = request.body;
+//     //faz a requisicao do email da sessao para estar logado
+//     let email = request.session.email;
+//     //variavel para realizar o comando MySQL
+//     let passwordsql = "UPDATE accounts SET password = MD5(?) WHERE email = ?"
+//     connection.query(passwordsql, [password, email], (err, results) => {
+//         if (err) {
+//             response.redirect('/recsenha1')
+//         }
+//         if (results) {
+//             response.redirect('/signed')
+//         }
+//     })
+// })
 
 //-------alteracao de dados--------------//
-router.get('/signed/alterdata', async(request, response) => {
-    if (request.session.loggedin) {
-        //faz a requisicao do email da sessao para estar logado
-        let email = request.session.email;
-        //variavel para realizar o comando MySQL
-        let sql = "SELECT * FROM nodelogin.accounts WHERE email = ?"
-        connection.query(sql, [email], function(error, results) {
-            let user = results[0]
-            response.render('pages/alterdata', { user: user });
-        })
+// router.get('/signed/alterdata', async(request, response) => {
+//     if (request.session.loggedin) {
+//         //faz a requisicao do email da sessao para estar logado
+//         let email = request.session.email;
+//         //variavel para realizar o comando MySQL
+//         let sql = "SELECT * FROM nodelogin.accounts WHERE email = ?"
+//         connection.query(sql, [email], function(error, results) {
+//             let user = results[0]
+//             response.render('pages/alterdata', { user: user });
+//         })
 
-    } else {
-        // 	// Nao esta logado
-        response.redirect('/home');
-    }
-});
+//     } else {
+//         // 	// Nao esta logado
+//         response.redirect('/home');
+//     }
+// });
 
-router.post('/altername', async(request, response) => {
-    //faz a requisição vinda do body do html para alterar o nome
-    const { name } = request.body;
-    //faz a requisicao do email da sessao para estar logado
-    let email = request.session.email;
-    //variavel para realizar o comando MySQL
-    let password = "UPDATE accounts SET name = ? WHERE email = ?"
-    connection.query(password, [name, email], (err, results) => {
-        if (err) {
-            response.redirect('/signed/alterdata')
-        }
-        if (results) {
-            response.redirect('/success')
-        }
-    })
-})
+// router.post('/altername', async(request, response) => {
+//     //faz a requisição vinda do body do html para alterar o nome
+//     const { name } = request.body;
+//     //faz a requisicao do email da sessao para estar logado
+//     let email = request.session.email;
+//     //variavel para realizar o comando MySQL
+//     let password = "UPDATE accounts SET name = ? WHERE email = ?"
+//     connection.query(password, [name, email], (err, results) => {
+//         if (err) {
+//             response.redirect('/signed/alterdata')
+//         }
+//         if (results) {
+//             response.redirect('/success')
+//         }
+//     })
+// })
 
-router.post('/alterwpp', async(request, response) => {
-    //faz a requisição vinda do body do html para alterar o whatsrouter
-    const { wpp } = request.body;
-    //faz a requisicao do email da sessao para estar logado
-    let email = request.session.email;
-    //variavel para realizar o comando MySQL
-    let senha = "UPDATE accounts SET wpp = ? WHERE email = ?"
-    connection.query(senha, [wpp, email], (err, results) => {
-        if (err) {
-            response.redirect('/signed/alterdata')
-        }
-        if (results) {
-            response.redirect('/success')
-        }
-    })
-})
+// router.post('/alterwpp', async(request, response) => {
+//     //faz a requisição vinda do body do html para alterar o whatsrouter
+//     const { wpp } = request.body;
+//     //faz a requisicao do email da sessao para estar logado
+//     let email = request.session.email;
+//     //variavel para realizar o comando MySQL
+//     let senha = "UPDATE accounts SET wpp = ? WHERE email = ?"
+//     connection.query(senha, [wpp, email], (err, results) => {
+//         if (err) {
+//             response.redirect('/signed/alterdata')
+//         }
+//         if (results) {
+//             response.redirect('/success')
+//         }
+//     })
+// })
 
-router.post('/alterpassword', async(request, response) => {
-    //faz a requisição vinda do body do html para alterar a senha ja estando logado
-    const { password } = request.body;
-    //faz a requisicao do email da sessao para estar logado
-    let email = request.session.email;
-    //variavel para realizar o comando MySQL
-    let senha = "UPDATE accounts SET password = MD5(?) WHERE email = ?"
-    connection.query(senha, [password, email], (err, results) => {
-        if (err) {
-            response.redirect('/signed/alterdata')
-        }
-        if (results) {
-            response.redirect('/success')
-        }
-    })
-})
+// router.post('/alterpassword', async(request, response) => {
+//     //faz a requisição vinda do body do html para alterar a senha ja estando logado
+//     const { password } = request.body;
+//     //faz a requisicao do email da sessao para estar logado
+//     let email = request.session.email;
+//     //variavel para realizar o comando MySQL
+//     let senha = "UPDATE accounts SET password = MD5(?) WHERE email = ?"
+//     connection.query(senha, [password, email], (err, results) => {
+//         if (err) {
+//             response.redirect('/signed/alterdata')
+//         }
+//         if (results) {
+//             response.redirect('/success')
+//         }
+//     })
+// })
 
-router.post("/scheduling", function(request, response) {
-    if (request.session.loggedin) {
-        //faz a requisicao do email da sessao para estar logado
-        let email = request.session.email;
-        //variavel para realizar o comando MySQL
-        let sql = "SELECT id_client FROM nodelogin.accounts WHERE email = ?";
-        connection.query(sql, [email], function(err, results) {
-            if (err) {
-                response.redirect("/signed");
-            }
-            if (results) {
-                const { time } = request.body;
-                const { date } = request.body;
-                const { professional } = request.body;
-                const { proceedings } = request.body;
-                const { id_client } = results[0];
-
-                let sqldate = "SELECT * FROM nodelogin.scheduling WHERE time = ? and date = ? and professional = ? and proceedings = ? ";
-
-                connection.query(sqldate, [time, date, professional, proceedings], (err, results) => {
-                    if (err) {
-                        response.redirect("/signed");
-                    }
-                    if (results.length > 1) {
-                        console.log("ja existe agendamento");
-                    } else {
-                        let sqlmark = "INSERT INTO nodelogin.scheduling (time, date, professional, proceedings, id_client) VALUES(?, ?, ?, ?, ?)";
-                        connection.query(sqlmark, [time, date, professional,
-                            proceedings, id_client
-                        ], (err, results) => {
-                            if (err) {
-                                console.log("não foi agendado");
-                            }
-                            if (results) {
-                                console.log("atendimento agendado");
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    } else {
-        // 	// Nao esta logado
-        response.redirect("/home");
-    }
-});
-
-router.get("/schedule", function(request, response) {
-    //se o usuario esta logado
-    if (request.session.loggedin) {
-        //faz a requisicao do email da sessao para estar logado
-        let email = request.session.email;
-        let sql = "SELECT id_client FROM nodelogin.accounts WHERE email = ?";
-        connection.query(sql, [email], function(err, results) {
-            let user = results[0];
-            if (err) throw err;
-            if (results) {
-                let schedules =
-                    "SELECT * FROM nodelogin.scheduling WHERE id_client = ? ";
-                connection.query(schedules, [user], function(err, results) {
-                    let schedue = (results);
-                    // response.render('pages/agendamentos.ejs', {schedue:schedue});
-                });
-            }
-        });
-    } else {
-        // 	// Nao esta logado
-        response.redirect("/home");
-    }
-});
 
 module.exports = app => app.use('/auth', router);
