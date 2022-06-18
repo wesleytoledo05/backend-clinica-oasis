@@ -21,6 +21,7 @@ app.use(session({
 require('./controllers/authController')(app);
 require('./controllers/customerController')(app);
 require('./controllers/scheduleController')(app);
+require('./controllers/proceedingsController')(app);
 
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);

@@ -4,12 +4,10 @@ const mysqConnection = require("../database");
 const router = express.Router();
 
 
-
-
 router.get("/findall/:id_client", function(request, response) {
 
     let id_client = request.params.id_client;
-    let schedules = "SELECT * FROM scheduling WHERE id_client = ? ";
+    let schedules = "SELECT scheduling.*, proceedings.*  FROM scheduling left join proceedings ON scheduling.id_proceedings = proceedings.id_proceedings WHERE id_client = ? ORDER BY date ASC";
 
     mysqConnection.query(schedules, [id_client], function(err, results) {
 
@@ -21,57 +19,41 @@ router.get("/findall/:id_client", function(request, response) {
         }
 
     });
+});
 
+router.post("/create", function(request, response) {
 
+    const { time, date, professional, canceled, id_client, id_proceedings } = request.body;
+
+    let sql = "INSERT INTO scheduling(time, date, professional, canceled, id_client, id_proceedings) VALUES(?, ?, ?, ?, ?, ?)";
+    
+    mysqConnection.query(sql, [time, date, professional, canceled, id_client, id_proceedings], (err, results) => {
+        if (err) {
+            response.status(500).json({message: "Erro ao cadastrar agendamento"+err})
+        }
+        if (results) {
+            response.status(201).json({message: "Cadastro do agendamento realizado com sucesso!"})
+        }
+
+    });
 });
 
 
+router.put("/cancel/:id_scheduling", function(request, response) {
 
-router.post("/scheduling", function(request, response) {
-    if (request.session.loggedin) {
-        //faz a requisicao do email da sessao para estar logado
-        let email = request.session.email;
-        //variavel para realizar o comando MySQL
-        let sql = "SELECT id_client FROM nodelogin.accounts WHERE email = ?";
-        connection.query(sql, [email], function(err, results) {
-            if (err) {
-                response.redirect("/signed");
-            }
-            if (results) {
-                const { time } = request.body;
-                const { date } = request.body;
-                const { professional } = request.body;
-                const { proceedings } = request.body;
-                const { id_client } = results[0];
+    const {id_scheduling } = request.params;
 
-                let sqldate = "SELECT * FROM nodelogin.scheduling WHERE time = ? and date = ? and professional = ? and proceedings = ? ";
+    let sql = "update scheduling set canceled = true where id_scheduling = ?";
+    
+    mysqConnection.query(sql, [id_scheduling], (err, results) => {
+        if (err) {
+            response.status(500).json({message: "Erro ao cancelar agendamento" + err})
+        }
+        if (results) {
+            response.status(201).json({message: "Agendamento cancelado com sucesso!"})
+        }
 
-                connection.query(sqldate, [time, date, professional, proceedings], (err, results) => {
-                    if (err) {
-                        response.redirect("/signed");
-                    }
-                    if (results.length > 1) {
-                        console.log("ja existe agendamento");
-                    } else {
-                        let sqlmark = "INSERT INTO nodelogin.scheduling (time, date, professional, proceedings, id_client) VALUES(?, ?, ?, ?, ?)";
-                        connection.query(sqlmark, [time, date, professional,
-                            proceedings, id_client
-                        ], (err, results) => {
-                            if (err) {
-                                console.log("não foi agendado");
-                            }
-                            if (results) {
-                                console.log("atendimento agendado");
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    } else {
-        // 	// Nao esta logado
-        response.redirect("/home");
-    }
+    });
 });
 
 module.exports = app => app.use('/schedules', router);
