@@ -2,6 +2,10 @@ const express = require("express");
 const mysqConnection = require("../database");
 
 const router = express.Router();
+router.get('/', async(request, response) => {
+    return response.status(200).json({ message: "Bem vindo a API da Clinica Oasis!" })
+})
+
 
 //-----------------cadastro-----------------//
 router.post('/register', async(request, response) => {
