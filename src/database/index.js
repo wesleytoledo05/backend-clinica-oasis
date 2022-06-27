@@ -1,14 +1,16 @@
 
 const mysql = require('mysql');
+const dbConfig = require("../config/db.config.js")
 
 //faz a conexao com o banco de dados
-const mysqConnection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_DATABASE
+const mysqConnection = mysql.createPool({
+  host: dbConfig.DB_HOST,
+  user: dbConfig.DB_USER,
+  password: dbConfig.DB_PASS,
+  database: dbConfig.DB_DATABASE
 });
 
-mysqConnection.connect();
+console.log(dbConfig.DB_HOST);
+
 
 module.exports = mysqConnection;
