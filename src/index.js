@@ -5,7 +5,9 @@ const cors = require('cors');
 
 require('dotenv').config();
 
+const router = express.Router();
 const app = express();
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
@@ -17,6 +19,10 @@ app.use(session({
   resave: true,
   saveUninitialized: true
 }));
+
+router.get('/', async(request, response) => {
+   response.status(200).json({ message: "Bem vindo a API da Clinica Oasis!" })
+})
 
 require('./controllers/authController')(app);
 require('./controllers/customerController')(app);
