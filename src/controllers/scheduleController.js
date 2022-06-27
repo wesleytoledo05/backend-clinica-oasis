@@ -41,7 +41,7 @@ router.post("/create", function(request, response) {
 
 router.put("/cancel/:id_scheduling", function(request, response) {
 
-    const {id_scheduling } = request.params;
+    const {id_scheduling} = request.params;
 
     let sql = "update scheduling set canceled = true where id_scheduling = ?";
     
